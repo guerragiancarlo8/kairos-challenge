@@ -1,0 +1,11 @@
+{
+  "name": "eje",
+  "version": "1.0.0",
+  "dependencies": {
+    "body-parser": "^1.7.0",
+    "express": "4.0",
+    "express-session": "1.13.0",
+    "jwt-simple": "^0.2.0"
+  }
+
+}

@@ -1,0 +1,38 @@
+<script src="../bower_components/page/page.js"></script>
+<script>
+
+  var app = document.querySelector("#application");
+  window.addEventListener("WebComponentsReady", function(){
+
+
+    page('/', function(){
+
+      var oFrame = document.getElementById("pagesContainer")
+
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function(){
+        if(xhttp.readyState == 4 && xhttp.status == 200){
+          var content = JSON.parse(xhttp.response);
+          for(var i=0; i < content["days"].length; i++){
+            var newDiv = document.createElement('div')
+            newDiv.innerHTML = content["days"][i]
+            console.log(newDiv)
+            oFrame.appendChild(newDiv)
+          }
+        }
+      }
+      xhttp.open("GET", "http://localhost:3000/data", true);
+      xhttp.send()
+
+    })
+
+    page('/pagina/:pagina', function(){
+      console.log('eje')
+    })
+
+    page({
+      hashbang: false
+    });
+
+  })
+</script>

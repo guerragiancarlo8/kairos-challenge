@@ -1,0 +1,186 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id='swipeable-pages'>
+
+  <template>
+    <style>
+      :host{
+          touch-action: inherit; /*needed to scroll on mobiles*/
+      }
+      :host, .pagesContainer {
+        display: block;
+        height: 100%;
+        width: 100%;
+        @apply(--layout-horizontal);
+      }
+      .swipe {
+        -moz-user-select: none;
+        -ms-user-select: none;
+        -webkit-user-select: none;
+        user-select: none;
+        cursor: default;
+      }
+      .main{
+        width: 100%;
+        height: 100%;
+      }
+      #pagesContainer > ::content > * {
+        @apply(--layout-flex);
+      }
+    </style>
+
+    <div class="main">
+      <div id='pagesContainer' class='pagesContainer' style="-webkit-overflow-scrolling:touch;">
+        <content id='pages'></content>
+      </div>
+    </div>
+
+  </template>
+
+
+
+  <script>
+  (function() {
+    'use strict';
+    var isWebkit = document.body.style.webkitTransform !== undefined;
+    var resetAnimations = function(element) {
+      setTransition('', element);
+    };
+    var setAnimationDuration = function(duration, element, easingFunction) {
+      easingFunction = easingFunction || 'ease-out';
+      var transition = (isWebkit ? '-webkit-' : '') + 'transform ';
+      transition = transition + duration.toString() + 's ' + easingFunction;
+      setTransition(transition, element);
+    };
+    var setTransition = function(transition, element) {
+      if (isWebkit) {
+        element.$.pagesContainer.style.webkitTransition = transition;
+      }else {
+        element.$.pagesContainer.style.transition = transition;
+      }
+    };
+    var setTransform = function(transform, element) {
+      if (isWebkit) {
+        element.$.pagesContainer.style.webkitTransform = transform;
+      }else {
+        element.$.pagesContainer.style.transform = transform;
+      }
+    };
+    var moveToPosition = function(position, element) {
+      var transform = 'translateX(' + position.toString() + '%)';
+      setTransform(transform, element);
+    };
+    var moveToPage = function(pageNumber, element) {
+      var position = -pageNumber * 100 / element.pageCount;
+      moveToPosition(position, element);
+    };
+    var resetScrollTop = function(element) {
+      if (element) {
+        element.$.pageContainer.scrollTop = 0;
+      }
+    };
+    Polymer({
+      is: 'swipeable-pages',
+      properties: {
+        threshold: Number,
+        transitionDuration: Number,
+        selected: {
+          type: Number,
+          value: 0,
+          notify: true,
+          observer: 'selectedChanged'
+        },
+        pageCount: {
+          type: Number,
+          notify: true,
+          observer: '_init'
+        }
+      },
+      listeners: {
+        'track': 'trackHandler'
+      },
+      hostAttributes: {
+        threshold: 0.3,
+        transitionDuration: 0.3,
+        selected: 0
+      },
+      _init: function() {
+        this.pageWidth = this.getBoundingClientRect().width;
+        this.resetWidths();
+      },
+      resetWidths: function() {
+        this.$.pagesContainer.style.width = '' + (100 * this.pageCount) + '%';
+      },
+      trackHandler: function(event) {
+        switch (event.detail.state) {
+          case 'start':
+            this.$.pagesContainer.classList.add('swipe');
+            // console.log('added swipe');
+            resetAnimations(this);
+            break;
+          case 'track':
+            var isFirstPage = (this.selected === 0);
+            var isLastPage  = (this.selected === (this.pageCount - 1));
+            var userIsSwipingLeftwards = (event.detail.dx < 0);
+            var userIsSwipingRightwards = (event.detail.dx > 0);
+            var tryingToSwipeToLeftOfFirstPage = userIsSwipingRightwards && isFirstPage;
+            var tryingToSwipeToRightOfLastPage = userIsSwipingLeftwards && isLastPage;
+            var tryingToSwipeToOutOfBoundsPage = tryingToSwipeToLeftOfFirstPage ||
+            tryingToSwipeToRightOfLastPage;
+            if (!tryingToSwipeToOutOfBoundsPage) {
+              var position = -(this.selected - (event.detail.dx / this.pageWidth));
+              position = position * 100 / this.pageCount;
+              moveToPosition(position, this);
+            }
+            break;
+          case 'end':
+            this.$.pagesContainer.classList.remove('swipe');
+            // console.log('removed swipe');
+            userIsSwipingLeftwards = (event.detail.dx < 0);
+            userIsSwipingRightwards = (event.detail.dx > 0);
+            var thresholdWasCrossed = (Math.abs(event.detail.dx) / this.pageWidth) > this.threshold;
+            setAnimationDuration(this.getAttribute('transitionDuration'), this);
+            if (thresholdWasCrossed) {
+              if (userIsSwipingRightwards) {
+                this.selected = Math.max(this.selected - 1, 0);
+              }
+              if (userIsSwipingLeftwards) {
+                this.selected = Math.min(this.selected + 1, this.pageCount - 1);
+              }
+            }else {
+              moveToPage(this.selected, this);
+            }
+            break;
+        }
+      },
+      selectedChanged: function(newValue, oldValue) {
+        if (this.pageCount !== 0) {
+          if (newValue >= this.pageCount || newValue < 0) {
+            var errorM = 'Page ' + newValue.toString() + ' is not a defined page. There are only ';
+            errorM = errorM + this.pageCount.toString() + ' pages.';
+            throw errorM;
+          }
+          moveToPage(newValue, this);
+
+          var self = this;
+          if (self.pages) {
+            window.setTimeout(function() {
+              resetScrollTop(self.pages[oldValue]);
+            }, self.transitionDuration * 1000);
+          }
+        }
+      },
+      _addListeners: function(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          return;
+        }
+        this.listen(node, 'track', 'trackHandler');
+      },
+      attached: function() {
+        this.style.touchAction = 'inherit';
+      }
+    });
+  })();
+  </script>
+
+</dom-module>

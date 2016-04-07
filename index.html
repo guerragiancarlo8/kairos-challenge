@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<head>
+  <script src="bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
+  <link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout.html">
+  <link rel="import" href="bower_components/paper-tabs/paper-tabs.html">
+  <link rel="import" href="custom/swipeable-pages.html">
+  <link rel="import" href="bower_components/excess-router/excess-router.html">
+  <link rel="import" href="custom/routing.html">
+
+  <style>
+    html, body{
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+  </style>
+
+
+</head>
+<body>
+  <template is="dom-bind" id="application">
+    <!--<excess-router-config path-style="path"></excess-router-config>-->
+    <!--<excess-route route="/pagina/:pagina" pagina={{selectedtab}} active=""></excess-route>-->
+    <!--<excess-route route="/(.*)?" redirect-to="/pagina/0" activation-modifiers="x"></excess-route>-->
+
+    <paper-tabs selected = "{{selectedtab}}">
+      <paper-tab><a href="/pagina/{{selectedtab}}">Lunes</a></paper-tab>
+      <paper-tab><a href="/pagina/{{selectedtab}}">Martes</a></paper-tab>
+      <paper-tab><a href="/pagina/{{selectedtab}}">Miércoles</a></paper-tab>
+      <paper-tab><a href="/pagina/{{selectedtab}}">Jueves</a></paper-tab>
+      <paper-tab><a href="/pagina/{{selectedtab}}">Viernes</a></paper-tab>
+      <paper-tab><a href="/pagina/{{selectedtab}}">Sábado</a></paper-tab>
+      <paper-tab><a href="/pagina/{{selectedtab}}">Domingo</a></paper-tab>
+    </paper-tabs>
+
+    <swipeable-pages class="flex horizontal layout" selected="{{selectedtab}}" page-count=7 id="pages">
+    </swipeable-pages>
+
+  </template>
+</body>
+</html>
